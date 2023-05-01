@@ -1,12 +1,15 @@
 import {Box, TextField, Button, styled, Typography} from '@mui/material';
 import { alignProperty } from '@mui/material/styles/cssUtils';
-import { useState } from 'react';
+import { useState, useContext } from 'react';
+import { API } from '../../services/api';
+import { DataContext } from '../../context/DataProvider.js';
+import { useNavigate } from 'react-router-dom';
 
 const StyledBox = styled(Box)`
 width: 400px;
 margin: auto;
 box-shadow: 4px 2px 4px 2px rgb(0 0 0/0.6);
-margin-top: 64px
+margin-top: 64px;
 `;
 
 const Image = styled('img')({
@@ -37,19 +40,40 @@ const SignUPButton = styled(Button)`
     box-shadow: 0px 0px 3px 3px rgb(0 0 0/ 20%)
 `
 
-//here properties' name must be as same as value of 'name' label in Textfield of HTML from where you are getting values
-const SignUPInitialValues = {
-    email: '',
-    userName: '',
-    password: ''
-}
+const Error = styled(Typography)`
+    font-size: 10px;
+    color: #ff6161;
+    line-height: 0;
+    margin-top: 10px;
+    font-weight: 600
+`
 
-const Login = () => {
+//here properties' name must be as same as value of 'name' label in Textfield of HTML from where you are getting values
+
+
+const Login = ({authenticate}) => {
     const imageURL = "https://res.cloudinary.com/dibsjiozz/image/upload/v1682534602/blog_home_kcaaqp.jpg";
+
+    const navigate = useNavigate();
+
+    const SignUPInitialValues = {
+        email: '',
+        userName: '',
+        password: ''
+    }
+    
+    const LoginInitialValues = {
+        userName: '',
+        password: ''
+    }
 
     //State handling
     const [LoginPage, toggleLoginPage] = useState(true); 
     const [signUPValues, setSignUPValues] = useState(SignUPInitialValues)
+    const [loginValues, setLoginValues] = useState(LoginInitialValues )
+    const [error, setError] = useState('')
+
+    const {account,setAccount} = useContext(DataContext);
 
     const LoginToggle = () => {
         toggleLoginPage(!LoginPage)
@@ -61,9 +85,41 @@ const Login = () => {
         })
     }
 
-    const signUp = () => {
-        console.log(signUPValues)
+    const onValueChange = (e) => {
+        setLoginValues({
+            ...loginValues, [e.target.name]: e.target.value
+        })
     }
+
+    const signUp = async() => {
+        let response = await API.userSignup(signUPValues);
+        if(response.isSuccess){
+            setError('')
+            setSignUPValues(SignUPInitialValues);
+            LoginToggle()
+        }else{
+            setError('Please try again later')
+        }
+    }
+
+    const logInUser = async() => {
+        console.log(loginValues)
+        const response = await API.userLogIn(loginValues);
+        if(response.isSuccess){
+            setError('')
+            console.log(response)
+            sessionStorage.setItem('accessToken', `Bearer ${response.data.accessToken}}`)
+            sessionStorage.setItem('refreshToken', `Bearer ${response.data.refreshToken}}`)
+
+            setAccount({userName: response.data.userName, email: response.data.email})
+            authenticate(true)
+            navigate('/')
+        }else{
+            console.log(response.msg) 
+            setError('Something went wrong, please try again later')
+        }
+    }
+
     return (
         <StyledBox>
             <Box>
@@ -72,17 +128,19 @@ const Login = () => {
                     LoginPage == true
                     ?
                         <Wrapper>
-                            <TextField variant='standard' label="Enter Username"/>
-                            <TextField variant='standard' label="Enter Password"/>
-                            <LoginButton variant='contained'>Login</LoginButton>
+                            <TextField variant='standard' value={loginValues.userName} onChange={(e) => onValueChange(e)} name='userName' label="Enter Username"/>
+                            <TextField variant='standard' value={loginValues.password} onChange={(e) => onValueChange(e)} name='password' label="Enter Password"/>
+                            <LoginButton variant='contained' onClick={logInUser} >Login</LoginButton>
                             <Typography align='center'>OR</Typography>
                             <SignUPButton variant='text' onClick={LoginToggle}>Create an account</SignUPButton>
                         </Wrapper>
                     :
                         <Wrapper>
-                            <TextField variant='standard' onChange={(e) => onInputChange(e)} name='email' label="Enter Email"/>
-                            <TextField variant='standard' onChange={(e) => onInputChange(e)} name='userName' label="Enter Username"/>
-                            <TextField variant='standard' onChange={(e) => onInputChange(e)} name='password' label="Enter Password"/>
+                            <TextField variant='standard' value={signUPValues.email} onChange={(e) => onInputChange(e)} name='email' label="Enter Email"/>
+                            <TextField variant='standard' value={signUPValues.userName} onChange={(e) => onInputChange(e)} name='userName' label="Enter Username"/>
+                            <TextField variant='standard' value={signUPValues.password} onChange={(e) => onInputChange(e)} name='password' label="Enter Password"/>
+
+                            {error && <Error>{error}</Error >}
 
                             <LoginButton variant='contained' onClick={signUp}>SignUP</LoginButton>
                             <Typography align='center'>OR</Typography>
