@@ -1,13 +1,15 @@
 import axios from 'axios';
 import { API_NOTIFICATION_MESSAGES, SERVICE_URLS } from '../constants/config.js';
+import { getAccessToken } from '../utils/common-utils.js';
 
 const URL = 'http://localhost:8000'
 
 const axiosInstance = axios.create({
     baseURL: URL,
-    timeout: 10000,
-    headers: {
-        "Content-Type": "application/json"
+    timeout: 20000,
+    headers: {  
+        //application/json
+        "Content-Type": "multipart/form-data"
     }
 })
 
@@ -90,6 +92,9 @@ for(const [key,value] of Object.entries(SERVICE_URLS)){
             url: value.url,
             data: body,
             responseType: value.responseType,
+            headers:{
+                authorization: getAccessToken()
+            },
             onUploadProgress: function(progressEvent){
                 if(showUploadProgress){
                     let precentageCompleted = Math.round((progressEvent.loaded * 100)/progressEvent.total)

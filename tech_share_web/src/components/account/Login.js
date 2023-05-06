@@ -92,7 +92,11 @@ const Login = ({authenticate}) => {
     }
 
     const signUp = async() => {
-        let response = await API.userSignup(signUPValues);
+        const formData = new FormData();
+        formData.append("userName", signUPValues.userName);
+        formData.append("password", signUPValues.password);
+        formData.append("email", signUPValues.email);
+        let response = await API.userSignup(formData);
         if(response.isSuccess){
             setError('')
             setSignUPValues(SignUPInitialValues);
@@ -104,12 +108,23 @@ const Login = ({authenticate}) => {
 
     const logInUser = async() => {
         console.log(loginValues)
-        const response = await API.userLogIn(loginValues);
+        const formData = new FormData();
+        console.log(logInUser)
+        console.log(typeof(loginValues.userName))
+        console.log('login username', loginValues.userName)
+        formData.append("userName", loginValues.userName);
+        formData.append("password", loginValues.password);
+        console.log(formData)
+        const response = await API.userLogIn(formData);
         if(response.isSuccess){
             setError('')
             console.log(response)
-            sessionStorage.setItem('accessToken', `Bearer ${response.data.accessToken}}`)
-            sessionStorage.setItem('refreshToken', `Bearer ${response.data.refreshToken}}`)
+            sessionStorage.setItem('accessToken', `Bearer ${response.data.accessToken}`)
+            sessionStorage.setItem('refreshToken', `Bearer ${response.data.refreshToken}`)
+            setTimeout(function() {
+                sessionStorage.removeItem('accessToken');
+                sessionStorage.removeItem('refreshToken');
+              }, 900000);
 
             setAccount({userName: response.data.userName, email: response.data.email})
             authenticate(true)
