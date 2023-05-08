@@ -108,9 +108,6 @@ const StyledCloseButton = styled('button')({
         backgroundColor: "rgba(0, 0, 0, 0.2)" /* semi-transparent black */
 })
 
-
-
-
 let intialPost = {
     title: '',
     description: '',
@@ -122,13 +119,20 @@ let intialPost = {
 
 function CreatePost(){
 
-
     const [selectedFields, selectField] = useState([]);
     const [images, setImages] = useState([])
     const [post, setPost] = useState(intialPost)
 
     const {account, setAccount} = useContext(DataContext);
     const navigate = useNavigate();
+
+    useEffect(()=>{
+        intialPost = {
+            ...intialPost,
+            ['userName']: account.userName,
+            ['createdDate']: new Date()
+        }
+    }, [])
     
 
     function select(type){
@@ -148,7 +152,7 @@ function CreatePost(){
     }
 
     useEffect( () =>{
-        setPost(post)
+        setPost(intialPost)
     },
         [intialPost]
     )
@@ -196,10 +200,9 @@ function CreatePost(){
       } 
 
       const handleFileUploading = async() =>{
+        console.log('username', account.userName)
         const formData = new FormData();
         
-        console.log(images, 'dataurls')
-        const binaryDatas = []
         for (let i = 0; i < images.length; i++) {
             // Parse the data URL to extract the data and metadata
             const matches = images[i].match(/^data:(.+);base64,(.+)$/);
@@ -214,35 +217,14 @@ function CreatePost(){
           
             // Append the file to the FormData object
             formData.append('files', blob, `file${i}.${contentType.split("/")[1]}`);
-            console.log(formData)
           }
-            console.log(formData, 'formdataaa')
-            console.log('uploaded')
            const responses = await API.userFileUpload(formData)
-           console.log(responses)
 
-           intialPost = {
-            ...intialPost, 
-            ['images']: responses.data.imageUrls,
-            ['userName']: account.userName
-           }
+           return responses;
 
       }
 
-      const handleUploadPost = async() =>{
-
-        if(images.length > 0){
-           await handleFileUploading()
-        }
-        
-        setPost(intialPost)
-
-        // title: '',
-        // description: '',
-        // images: [],
-        // userName: '',
-        // attachedFields: [],
-        // createdDate:  new Date() 
+      const finishUploadPost = async() =>{
 
         const formData = new FormData();
         formData.append("title", post.title);
@@ -255,10 +237,100 @@ function CreatePost(){
            const response = await API.createPost(formData);
 
            if(response.isSuccess){
-                navigate('/')
+            intialPost = {
+                ...intialPost,
+                ['title']: '',
+                ['description']: '',
+                ['images']: [],
+                ['attachedFields']: [],
+                ['createdDate']: null
+           }
+           setPost(intialPost);
+           console.log(intialPost)
+                navigate('/');
            }
 
            console.log(post)
+      }
+
+
+      const handleUploadPost = async() =>{
+
+        console.log('username', account.userName)
+        console.log('length of images', images.length)
+        if(images.length > 0){
+           const responses = await handleFileUploading();
+           intialPost = {
+            ...intialPost, 
+            ['images']: responses.data.imageUrls,
+            ['userName']: account.userName
+           }
+           console.log('before my condn..', intialPost)
+           if(intialPost.createdDate === null || intialPost.userName === ''){
+            console.log('its being run broski, it must not be null')
+                intialPost = {
+                    ...intialPost,
+                    ['createdDate'] : new Date(),
+                    ['userName']: account.userName
+                }
+           }
+           console.log('after my condn...', post)
+           setPost({
+            ...intialPost
+           })
+
+           finishUploadPost();
+
+        }else{
+            intialPost = {
+                ...intialPost, 
+                ['images']: [],
+                ['userName']: account.userName
+               }
+               if(intialPost.createdDate == null || intialPost.userName === ''){
+                intialPost = {
+                    ...intialPost,
+                    ['createdDate'] : new Date(),
+                    ['userName']: account.userName
+                }
+           }
+               console.log(intialPost)
+               setPost(intialPost)
+
+        const formData = new FormData();
+        formData.append("title", post.title);
+        formData.append("description", post.description);
+        formData.append("images", post.images);
+        formData.append("userName", post.userName);
+        formData.append("attachedFields", post.attachedFields);
+        formData.append("createdDate", post.createdDate);
+
+           const response = await API.createPost(formData);
+
+           if(response.isSuccess){
+            intialPost = {
+                ...intialPost,
+                ['title']: '',
+                ['description']: '',
+                ['images']: [],
+                ['attachedFields']: [],
+                ['createdDate']: null
+           }
+           setPost(intialPost);
+           console.log('after success', intialPost)
+                navigate('/');
+           }
+
+           console.log(post)
+        }
+
+        // title: '',
+        // description: '',
+        // images: [],
+        // userName: '',
+        // attachedFields: [],
+        // createdDate:  new Date() 
+
       }
 
     return(

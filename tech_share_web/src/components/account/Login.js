@@ -124,7 +124,7 @@ const Login = ({authenticate}) => {
             setTimeout(function() {
                 sessionStorage.removeItem('accessToken');
                 sessionStorage.removeItem('refreshToken');
-              }, 900000);
+              }, 3600000);
 
             setAccount({userName: response.data.userName, email: response.data.email})
             authenticate(true)

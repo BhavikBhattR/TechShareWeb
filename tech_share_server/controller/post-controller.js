@@ -12,8 +12,34 @@ export const createPost = async(req,res,next)=> {
         })
     }catch(error){
        res.status(500).json({
-        msg: 'post not saved'
+        msg: error
        })
     }
 
+}
+
+//db.myCollection.find({ "hobbies": { "$in": hobbiesArray } });
+
+export const getPosts = async(req,res,next)=>{
+    console.log(req.body)
+    console.log(req.body.selectedFields)
+    try{
+          const selectedFields = req.body.selectedFields.split(',')
+          console.log(selectedFields)
+          let posts = req.body.selectedFields.length === 0 ? await Post.find() : 
+          await Post.find(
+            {   
+                "attachedFields": { 
+                    $in: selectedFields 
+                } 
+              }
+            );
+        return res.status(200).json({
+            posts
+        })
+    }catch(error){
+        return res.status(500).json({
+            error: error
+        })
+    }
 }

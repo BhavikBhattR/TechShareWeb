@@ -3,11 +3,16 @@ import {Button, Table, TableBody, TableCell, TableHead, TableRow} from '@mui/mat
 import { categories } from '../../constants/data';
 import styled from '@emotion/styled';
 import { Link } from 'react-router-dom';
+import {Box} from '@mui/material';
+import { useEffect } from 'react';
 
 
+const Container = styled(Box)`
+    height: 100%
+`
 
 const StyledTable = styled(Table)`
-    border: 1px solid rgba(224,224,224,1);
+    border: 4px solid rgba(224,224,224,1);
 `
 
 const StyledButton = styled(Button)`
@@ -18,9 +23,38 @@ const StyledButton = styled(Button)`
     border: 1px solid black;
 `
 
-const Categories = () => {
+const Categories = ({selectedCategoriesToDisplay, updateCategories}) => {
+
+    const filterChanged = (type) => {
+        console.log('helo')
+            if(selectedCategoriesToDisplay.includes(type)){
+               let categories = selectedCategoriesToDisplay.filter(ele => ele != type );
+               updateCategories(categories)
+            }else{
+                const newArray = [...selectedCategoriesToDisplay, type];
+                updateCategories(newArray);
+            }
+    }
+
+    // function select(type){
+    //     if(selectedFields.includes(type)){
+    //         let selected = selectedFields.filter((field)=> field !== type)
+    //          selectField(selected)
+    //     }else{
+    //          const newArray = [...selectedFields, type];
+    //          selectField(newArray)
+    //     }
+    // }
+
+    useEffect(
+        function(){
+            console.log(selectedCategoriesToDisplay)
+        }
+        , [selectedCategoriesToDisplay]
+    )
+
     return (
-        <>  
+        <Container>  
             <Link to={'/createPost'}>
             <StyledButton>Create Blog</StyledButton>
             </Link>
@@ -35,7 +69,7 @@ const Categories = () => {
                 <TableBody>
                     {
                         categories.map(category => {
-                        return <TableRow key={category.id}> 
+                        return <TableRow key={category.id} style={selectedCategoriesToDisplay.includes(category.type) ? {background: "green"} : {}} onClick={() =>{ filterChanged(category.type)}}> 
                             <TableCell>
                                 {category.type}
                             </TableCell>
@@ -44,7 +78,7 @@ const Categories = () => {
                     }
                 </TableBody>
             </StyledTable>
-        </>
+        </Container>
     )
 }
 

@@ -17,6 +17,14 @@ app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({extended: true}))
 app.use('/', router);
 
+
+app.use((req,res,next)=>{
+    res.status(500).json({
+        msg: 'there was an error'
+    })
+})
+  
+
 const PORT = 8000;
 
 app.listen(PORT, async () => {
