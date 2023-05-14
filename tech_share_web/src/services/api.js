@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { API_NOTIFICATION_MESSAGES, SERVICE_URLS } from '../constants/config.js';
-import { getAccessToken } from '../utils/common-utils.js';
+import { getAccessToken, getType  } from '../utils/common-utils.js';
 
 const URL = 'http://localhost:8000'
 
@@ -15,6 +15,12 @@ const axiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use(
     function (config){
+        if(config.TYPE.params){
+            config.params = config.TYPE.params;
+        }else if(config.TYPE.query){
+            config.url = config.url + '/' + config.TYPE.query;
+            console.log(config.url, 'config url')
+        }
         return config;
     },
     function (error){
@@ -86,8 +92,9 @@ const API = {}
 
 
 for(const [key,value] of Object.entries(SERVICE_URLS)){
-    API[key] =  (body, showUploadProgress, showDownloadProgress) => 
-        axiosInstance({
+    API[key] =  (body, showUploadProgress, showDownloadProgress) => {
+    
+        return axiosInstance({
             method: value.method,
             url: value.url,
             data: body,
@@ -95,6 +102,7 @@ for(const [key,value] of Object.entries(SERVICE_URLS)){
             headers:{
                 authorization: getAccessToken()
             },
+            TYPE: getType(value, body),
             onUploadProgress: function(progressEvent){
                 if(showUploadProgress){
                     let precentageCompleted = Math.round((progressEvent.loaded * 100)/progressEvent.total)
@@ -108,6 +116,7 @@ for(const [key,value] of Object.entries(SERVICE_URLS)){
                 }
             }
         })
+    }
 }
 
 export {API}; 

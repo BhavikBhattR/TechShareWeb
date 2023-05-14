@@ -8,7 +8,8 @@ import { useEffect } from 'react';
 
 
 const Container = styled(Box)`
-    height: 100%
+    position: "sticky";
+    top: 100px;
 `
 
 const StyledTable = styled(Table)`
@@ -54,7 +55,7 @@ const Categories = ({selectedCategoriesToDisplay, updateCategories}) => {
     )
 
     return (
-        <Container>  
+        <Container >  
             <Link to={'/createPost'}>
             <StyledButton>Create Blog</StyledButton>
             </Link>

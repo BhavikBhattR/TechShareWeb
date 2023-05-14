@@ -9,7 +9,7 @@ const Container = styled(Box)`
     height: 250px;
     & > p{
         padding: 0 5px 5px 5px;
-    }
+    };
 `
 
 const Image = styled('img')({

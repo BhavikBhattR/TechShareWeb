@@ -1,12 +1,13 @@
-import { Box, FormControl, TextField, TextareaAutosize } from "@mui/material";
+import { Box, FormControl, TextField, TextareaAutosize, styled } from "@mui/material";
 import { categories } from "../constants/data";
-import styled from "@emotion/styled";
-import { useEffect, useState, useContext } from "react";
+// import styled from "@emotion/styled";
+import { useEffect, useState, useContext, useRef } from "react";
 import AddAPhotoIcon from '@mui/icons-material/AddAPhoto';
 import { API } from "../services/api";
 import { Buffer } from "buffer";
 import {DataContext} from '../context/DataProvider.js'
-import {useNavigate} from 'react-router-dom'
+import {useNavigate, useParams} from 'react-router-dom'
+import zIndex from "@mui/material/styles/zIndex";
 
 
 const StyledBox = styled(Box)`
@@ -84,16 +85,25 @@ const MediaFilesContainer = styled(Box)`
     display: flex;
     flex-wrap: wrap;
     margin: 40px;
-    & >div{
-        position: relative;
-        margin: 20px auto;
-        border-radius: 10px;
-    };
-    & >div >img{
-        height: 300px;
-        // margin: 20px auto;
-        border-radius: 10px;
-    }
+`
+
+const ImageBox = styled(Box)`
+display: flex;
+flex-wrap: wrap;
+justfy-content: space-between;
+flex-grow: 1;
+flex-shrink: 1;
+& >div{
+    position: relative;
+    margin: 20px auto;
+    border-radius: 10px;
+    padding: 0px;
+};
+& >div >img{
+    height: 300px;
+    // margin: 0px auto;
+    border-radius: 10px;
+}
 `
 
 const StyledCloseButton = styled('button')({
@@ -105,10 +115,11 @@ const StyledCloseButton = styled('button')({
         marginRight: 6,
         color: "white",
         marginTop: 6,
-        backgroundColor: "rgba(0, 0, 0, 0.2)" /* semi-transparent black */
+        backgroundColor: "rgba(0, 0, 0, 0.2)" ,/* semi-transparent black */
+        zIndex: 1
 })
 
-let intialPost = {
+const postDefault = {
     title: '',
     description: '',
     images: [],
@@ -117,50 +128,122 @@ let intialPost = {
     createdDate:  new Date() 
 }
 
-function CreatePost(){
+function UpdatePost(){
 
     const [selectedFields, selectField] = useState([]);
     const [images, setImages] = useState([])
+    const [intialPost, setIntialPost] = useState(postDefault) 
     const [post, setPost] = useState(intialPost)
+    const initialRender = useRef(true);
+    const [newlyAddedImages, setNewAddedImages] = useState([])
+
 
     const {account, setAccount} = useContext(DataContext);
     const navigate = useNavigate();
+    const id = useParams();
+
 
     useEffect(()=>{
-        intialPost = {
+        setIntialPost({
             ...intialPost,
-            ['userName']: account.userName,
-            ['createdDate']: new Date()
+            ['images']: [...intialPost.images, ...newlyAddedImages]
+        })
+        setPost({
+            ...intialPost
+        })
+        console.log('successfull', intialPost)
+    }, [newlyAddedImages])
+
+
+    useEffect(()=>{
+        const fetchData = async () => {
+            console.log(id)
+            let response =  await API.getPostById(id.id);
+            console.log(response.data.post.images)
+            if(response.isSuccess){
+                let postToWorkWith  = {
+                    ...response.data.post,
+                    ['images']: response.data.post.images[0].split(',')
+                }
+                postToWorkWith = {
+                    ...postToWorkWith,
+                    ['images']: postToWorkWith.images[0] === '' ? [] : [...postToWorkWith.images]
+                }
+                console.log('response in updatePost.js', postToWorkWith)
+                setIntialPost({
+                    ...postToWorkWith
+                })
+               // intialPost = postToWorkWith
+            }
         }
-    }, [])
+        fetchData();
+    }, []
+    )
+
+    // useEffect(()=>{
+    //     const updatedIntialPost = {
+    //         ...intialPost,
+    //         ['userName']: account.userName
+    //     }
+    //     setIntialPost({
+    //         ...updatedIntialPost
+    //     })
+    // }, [])
+
+    useEffect(()=>{
+        const update = async() =>{
+            finishUpdatePost()
+         }
+        if (initialRender.current) {
+            initialRender.current = false;
+          } else {
+            update();
+          }
+    }, [post])
     
 
     function select(type){
         if(selectedFields.includes(type)){
             let selected = selectedFields.filter((field)=> field !== type)
              selectField(selected)
+             const postToWorkWith = {
+                ...intialPost,
+                ['attachedFields'] : selected
+             }
+             setIntialPost({
+                ...postToWorkWith
+             })
         }else{
              const newArray = [...selectedFields, type];
              selectField(newArray)
+             const postToWorkWith = {
+                ...intialPost,
+                ['attachedFields'] : newArray
+             }
+             setIntialPost({
+                ...postToWorkWith
+             })
         }
     }
 
     const handleDataInputChnages = (e) => {
-        intialPost = {
+        const updatedIntialPost = {
             ...intialPost, [e.target.name]: e.target.value
         }
+        setIntialPost({
+            ...updatedIntialPost
+        })
     }
 
-    useEffect( () =>{
-        setPost(intialPost)
-    },
-        [intialPost]
-    )
+
 
     useEffect(()=>{
-        intialPost = {
+        const updatedIntialPost = {
             ...intialPost, ['attachedFields'] : selectedFields
         }
+        setIntialPost({
+            ...updatedIntialPost
+        })
     }, [selectedFields])
 
     useEffect(() => {
@@ -191,12 +274,52 @@ function CreatePost(){
         });
       };
 
-      function removeImage(index){
-        console.log('image removal for ', index)
-        console.log(images[index])
-        const newFiles = [...images];
-        newFiles.splice(index, 1)
-        setImages(newFiles)
+      function removeImage(imageUrl){
+
+        console.log('images', images)
+        console.log('post images', post.images)
+
+        const checkString = imageUrl.split(':');
+
+        console.log(checkString)
+
+        if(checkString[0] === 'http'){
+            let imagesUploaded = [...post.images];
+            imagesUploaded = imagesUploaded.filter(url => url != imageUrl);
+            const updatedPost = {
+                ...intialPost,
+                ['images']: imagesUploaded
+            }
+            setIntialPost({
+                ...updatedPost
+            })
+            return;
+        }else{
+            let imagesSelected = [...images];
+            imagesSelected = imagesSelected.filter(url => url != imageUrl);
+            setImages(imagesSelected);
+            return;
+        }
+
+
+        console.log('images', images)
+        console.log('post images', post.images)
+
+        // const newFiles = [...images];
+        // newFiles.splice(images.length - 1, 1)
+        // setImages(newFiles)
+        // return;
+
+        // const modifiedUploadedImages = [...post.images];
+        //     modifiedUploadedImages.splice(post.images.length - 1, 1);
+        //     const updatedPost = {
+        //         ...post,
+        //         ['images']: modifiedUploadedImages
+        //     }
+        //     setPost(updatedPost)
+        //     return;
+
+
       } 
 
       const handleFileUploading = async() =>{
@@ -226,9 +349,14 @@ function CreatePost(){
 
       }
 
-      const finishUploadPost = async() =>{
+      const finishUpdatePost = async() =>{
 
+        console.log(post, 'post hai bhai')
+
+        console.log('it must go from here')
+        console.log(post._id)
         const formData = new FormData();
+        formData.append("_id", post._id)
         formData.append("title", post.title);
         formData.append("description", post.description);
         formData.append("images", post.images);
@@ -236,94 +364,71 @@ function CreatePost(){
         formData.append("attachedFields", post.attachedFields);
         formData.append("createdDate", post.createdDate);
 
-           const response = await API.createPost(formData);
+        console.log('called update function')
+        const response = await API.updatePost(formData);
+        if(response.isSuccess){
+             navigate(`/details/${post._id}`);
+        }
 
-           if(response.isSuccess){
-            intialPost = {
-                ...intialPost,
-                ['title']: '',
-                ['description']: '',
-                ['images']: [],
-                ['attachedFields']: [],
-                ['createdDate']: null
-           }
-           setPost(intialPost);
-           console.log(intialPost)
-                navigate('/');
-           }
-
-           console.log(post)
+        console.log(post)
       }
 
 
-      const handleUploadPost = async() =>{
+
+
+      const handleUpdatePost = async() =>{
 
         console.log('username', account.userName)
         console.log('length of images', images.length)
         if(images.length > 0){
            const responses = await handleFileUploading();
-           intialPost = {
+           const updatedIntialPost = {
             ...intialPost, 
-            ['images']: responses.data.imageUrls,
+            ['images']: [...responses.data.imageUrls, ...intialPost.images],
             ['userName']: account.userName
            }
+           console.log(updatedIntialPost, 'updated after image urls came from server')
+           setIntialPost({
+            ...updatedIntialPost
+           })
+           setNewAddedImages([...responses.data.imageUrls])
            console.log('before my condn..', intialPost)
            if(intialPost.createdDate === null || intialPost.userName === ''){
             console.log('its being run broski, it must not be null')
-                intialPost = {
+            console.log([...responses.data.imageUrls, ...post.images], 'brev')
+                const updatedIntialPost = {
                     ...intialPost,
+                    ['images'] : [...responses.data.imageUrls, ...intialPost.images],
                     ['createdDate'] : new Date(),
                     ['userName']: account.userName
                 }
+                
+                setIntialPost({
+                    ...updatedIntialPost
+                })
            }
-           console.log('after my condn...', post)
-           setPost({
-            ...intialPost
-           })
-
-           finishUploadPost();
 
         }else{
-            intialPost = {
+            const updatedIntialPost = {
                 ...intialPost, 
-                ['images']: [],
+                ['images']: [...post.images],
                 ['userName']: account.userName
                }
+               setIntialPost({
+                ...updatedIntialPost
+               })
                if(intialPost.createdDate == null || intialPost.userName === ''){
-                intialPost = {
+                const updatedIntialPost = {
                     ...intialPost,
                     ['createdDate'] : new Date(),
                     ['userName']: account.userName
                 }
-           }
-               console.log(intialPost)
-               setPost(intialPost)
-
-        const formData = new FormData();
-        formData.append("title", post.title);
-        formData.append("description", post.description);
-        formData.append("images", post.images);
-        formData.append("userName", post.userName);
-        formData.append("attachedFields", post.attachedFields);
-        formData.append("createdDate", post.createdDate);
-
-           const response = await API.createPost(formData);
-
-           if(response.isSuccess){
-            intialPost = {
-                ...intialPost,
-                ['title']: '',
-                ['description']: '',
-                ['images']: [],
-                ['attachedFields']: [],
-                ['createdDate']: null
-           }
-           setPost(intialPost);
-           console.log('after success', intialPost)
-                navigate('/');
+                setIntialPost({
+                    ...updatedIntialPost
+                })
            }
 
-           console.log(post)
+
         }
 
         // title: '',
@@ -345,7 +450,7 @@ function CreatePost(){
                     categories.map(category=>{
                         return (
                             <div key={category.id}>
-                                <StyledElement style={{background: selectedFields.includes(category.type) ? 'green' : 'red'}} onClick={() => {select(category.type)}}>
+                                <StyledElement style={{background: intialPost.attachedFields.includes(category.type) ? 'green' : 'red'}} onClick={() => {select(category.type)}}>
                                 {category.type}
                                 </StyledElement>
                             </div>
@@ -356,14 +461,14 @@ function CreatePost(){
         </InputBox>
 
         <InputBox>
-        <StyledTextField placeholder="Enter Title of the post" InputProps={{style: {height: '40px'}}} onChange={(e) => handleDataInputChnages(e)} name="title"/>
+        <StyledTextField placeholder="Enter Title of the post" aria-readonly={false}  value={intialPost.title} InputProps={{style: {height: '40px'}}} onChange={(e) => handleDataInputChnages(e)} name="title"/>
         </InputBox>
         <FormControl>
             <StyledLabel htmlFor="mediaInput">
                 <AddAPhotoIcon fontSize="large" color="action"/>
             </StyledLabel>
 
-            <StyledUploadLabel onClick={handleUploadPost}>Upload</StyledUploadLabel>
+            <StyledUploadLabel onClick={handleUpdatePost}>Upload</StyledUploadLabel>
             <input 
             type="file" id="mediaInput" multiple style={{display: "none"}} onChange={handleImageChange}
             />
@@ -374,19 +479,25 @@ function CreatePost(){
             placeholder="Share your thoughts here....."
             onChange={(e)=> handleDataInputChnages(e)}
             name="description"
+            value={intialPost.description}
         />
         </InputBox>
         <MediaFilesContainer>
-        {images.map((imageUrl, index) => (
-            <div>
-                <StyledCloseButton onClick={(index) => {removeImage(index)}}>X</StyledCloseButton>
-                <img key={index} src={imageUrl} alt={`Image ${index}`} />
-            </div>
+            {
+                ((intialPost.images.length + images.length) > 0) &&
+                <ImageBox>
+                       {[...intialPost.images, ...images].map((imageUrl, index) => (
+                        <div>
+                            <StyledCloseButton onClick={() => {removeImage(imageUrl)}}>X</StyledCloseButton>
+                            <img key={index} src={imageUrl} alt={`Image ${index}`} />
+                        </div>
         ))}
+                </ImageBox>
+            }
       </MediaFilesContainer>
         </Container>
     )
 
 }
 
-export default CreatePost;
+export default UpdatePost;

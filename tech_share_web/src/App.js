@@ -6,7 +6,13 @@ import Home from './components/Home/Home.js';
 import {BrowserRouter, Navigate, Outlet, Route, Routes} from 'react-router-dom'
 import Header from './components/header/Header';
 import CreatePost from './components/CreatePost';
+import DetailView from './components/details/DetailView';
+import UpdatePost from './components/UpdatePost';
 
+const clearSessionBeforeLogOut = () => {
+  sessionStorage.removeItem('accessToken');
+  sessionStorage.removeItem('refreshToken');
+}
 
 const PrivateRoute = ({isAuthenticated, ...props}) => {
 
@@ -15,7 +21,7 @@ const PrivateRoute = ({isAuthenticated, ...props}) => {
       <Header/>
       <Outlet/>
     </> 
-    : <Navigate replace to='/login'/>
+    : <Navigate replace to='/login' onBeforeNavigate={clearSessionBeforeLogOut} />
 }
 
 function App() {
@@ -35,6 +41,14 @@ function App() {
 
                 <Route path='/createPost' element={<PrivateRoute isAuthenticated={isAuthenticated}/>}>
                     <Route path='/createPost' element={<CreatePost/>}></Route>
+                </Route>
+
+                <Route path='/details/:id' element={<PrivateRoute isAuthenticated={isAuthenticated}/>}>
+                    <Route path='/details/:id' element={<DetailView />}></Route>
+                </Route>
+
+                <Route path='/update/:id' element={<PrivateRoute isAuthenticated={isAuthenticated}/>}>
+                    <Route path='/update/:id' element={<UpdatePost />}></Route>
                 </Route>
 
                 </Routes>

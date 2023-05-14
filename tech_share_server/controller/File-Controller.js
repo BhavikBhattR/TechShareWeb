@@ -18,7 +18,7 @@ conn.once("open", ()=>{
 
 export const fileUpload_POST = (req,res) => {
   if(req.files.length > 0){
-      const imageUrls = []
+      let imageUrls = []
       for(let index=0; index<req.files.length; index++){
         imageUrls.push(`${backedndURL}/file/${req.files[index].filename}`)
       }
