@@ -12,11 +12,16 @@ import {Edit, Delete} from '@mui/icons-material';
 
 import { useNavigate } from "react-router-dom";
 
+import Comments from "./Comments/Comments";
+
+//start
 const Holder = styled(Box)`
     display: flex;
     flex-direction: column;
-    flex-wrap: wrap;
-    margin: 0;
+    flex-shrink: 1;
+    flex-grow: 1;
+    // flex-wrap: wrap;
+    // padding: 10px;
     height: 100vh;
     background-color: #FFF5EE;
     box-sizing: box-border;
@@ -64,7 +69,7 @@ const Title = styled(Typography)`
     text-align: center;
     background: #8fbc8b;
     color: black;
-    padding: 15px;
+    padding: 7px 0px 7px;
     // margin: 10px 20px 20px 0px;
     margin-top: 15px;
     margin-bottom: -15px;
@@ -222,6 +227,7 @@ const DetailView = () => {
         <Description>
             <Typography>{post.description}</Typography>
         </Description>
+        <Comments post={post}/>
     </Holder>
     }
 }
