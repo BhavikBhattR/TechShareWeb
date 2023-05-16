@@ -25,7 +25,7 @@ app.use((req,res,next)=>{
 })
   
 
-const PORT = 8000;
+const PORT = process.env.PORT;
 
 app.listen(PORT, async () => {
     console.log(`Server is running on PORT ${PORT}`);
