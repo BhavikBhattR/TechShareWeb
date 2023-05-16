@@ -20,7 +20,7 @@ export const postComment = async(req,res,next) => {
 
 export const getAllComments = async(req,res,next) => {
     try{
-       const comments = await Comment.find({postId: req.params.id});
+       const comments = await Comment.find({postId: req.params.id}).sort({date: -1});
 
        return res.status(200).json({
             comments: comments

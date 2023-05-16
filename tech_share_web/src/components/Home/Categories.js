@@ -47,12 +47,7 @@ const Categories = ({selectedCategoriesToDisplay, updateCategories}) => {
     //     }
     // }
 
-    useEffect(
-        function(){
-            console.log(selectedCategoriesToDisplay)
-        }
-        , [selectedCategoriesToDisplay]
-    )
+
 
     return (
         <Container >  

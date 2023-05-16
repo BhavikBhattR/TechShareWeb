@@ -55,7 +55,10 @@ const Comments = ({post}) => {
     const handleChange = (e) => {
         setComment({
             ...comment,
-            ['comment']: e.target.value
+            ['comment']: e.target.value,
+            ['userName'] : account.userName,
+            ['postId']: post._id,
+            ['date']: new Date()
         })
     }
 

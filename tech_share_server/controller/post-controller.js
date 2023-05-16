@@ -28,14 +28,18 @@ export const createPost = async(req,res,next)=> {
 export const getPosts = async(req,res,next)=>{
     try{
           const selectedFields = req.body.selectedFields.split(',')
-          let posts = req.body.selectedFields.length === 0 ? await Post.find() : 
-          await Post.find(
-            {   
-                "attachedFields": { 
-                    $in: selectedFields 
-                } 
-              }
-            );
+          console.log(selectedFields)
+          let posts = req.body.selectedFields.length === 0 ? await Post.find().sort({createdDate: -1}) : 
+          await Post.find({
+            "attachedFields": { 
+                "$exists": true,
+                "$elemMatch": { "$in": selectedFields }
+            }
+        }
+            // {   
+            //         "attachedFields": { "$elemMatch": { $in: [...selectedFields]} } 
+            //   }
+            ).sort({createdDate: -1});
         return res.status(200).json({
             posts
         })

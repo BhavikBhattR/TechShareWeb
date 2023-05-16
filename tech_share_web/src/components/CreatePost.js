@@ -1,4 +1,4 @@
-import { Box, FormControl, TextField, TextareaAutosize } from "@mui/material";
+import { Box, FormControl, TextField, TextareaAutosize, CircularProgress } from "@mui/material";
 import { categories } from "../constants/data";
 import styled from "@emotion/styled";
 import { useEffect, useState, useContext } from "react";
@@ -8,6 +8,16 @@ import { Buffer } from "buffer";
 import {DataContext} from '../context/DataProvider.js'
 import {useNavigate} from 'react-router-dom'
 
+
+const ProgressBarContainer = styled(Box)`
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    background: rgb(14,14,14, 0.2);
+    z-index: 1;
+    display: flex;
+    justify-content: center;
+`
 
 const StyledBox = styled(Box)`
     display: flex;
@@ -126,6 +136,8 @@ function CreatePost(){
     const {account, setAccount} = useContext(DataContext);
     const navigate = useNavigate();
 
+    const [loading, setLoading] = useState(false);
+
     useEffect(()=>{
         intialPost = {
             ...intialPost,
@@ -239,6 +251,7 @@ function CreatePost(){
            const response = await API.createPost(formData);
 
            if(response.isSuccess){
+            setLoading(false)
             intialPost = {
                 ...intialPost,
                 ['title']: '',
@@ -250,14 +263,15 @@ function CreatePost(){
            setPost(intialPost);
            console.log(intialPost)
                 navigate('/');
+           }else{
+            setLoading(false)
            }
-
            console.log(post)
       }
 
 
       const handleUploadPost = async() =>{
-
+        setLoading(true)
         console.log('username', account.userName)
         console.log('length of images', images.length)
         if(images.length > 0){
@@ -321,8 +335,9 @@ function CreatePost(){
            setPost(intialPost);
            console.log('after success', intialPost)
                 navigate('/');
+           }else{
+            setLoading(false)
            }
-
            console.log(post)
         }
 
@@ -337,6 +352,12 @@ function CreatePost(){
 
     return(
         <Container>
+                 {
+                loading && 
+                <ProgressBarContainer>
+                        <CircularProgress style={{margin: "auto"}}/>
+                </ProgressBarContainer>
+            }
         <InputBox>
 
         <StyledSelectionTitle>Select the fields your blog is related to:</StyledSelectionTitle>

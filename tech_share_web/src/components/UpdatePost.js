@@ -148,22 +148,22 @@ function UpdatePost(){
             ...intialPost,
             ['images']: [...intialPost.images, ...newlyAddedImages]
         })
-        setPost({
-            ...intialPost
-        })
         console.log('successfull', intialPost)
     }, [newlyAddedImages])
 
-
+    
     useEffect(()=>{
         const fetchData = async () => {
             console.log(id)
             let response =  await API.getPostById(id.id);
             console.log(response.data.post.images)
             if(response.isSuccess){
+                console.log(response.data.post)
+                selectField([...response.data.post.attachedFields[0].split(",")])
                 let postToWorkWith  = {
                     ...response.data.post,
-                    ['images']: response.data.post.images[0].split(',')
+                    ['images']: response.data.post.images[0].split(','),
+                    ['attachedFields']: response.data.post.attachedFields[0].split(",")
                 }
                 postToWorkWith = {
                     ...postToWorkWith,
@@ -201,28 +201,26 @@ function UpdatePost(){
           }
     }, [post])
     
+    useEffect(()=>{
+        setIntialPost({
+            ...intialPost,
+            ['attachedFields']: [...selectedFields]
+        })
+    }, [selectedFields])
 
     function select(type){
+        console.log(intialPost)
+        console.log(selectedFields)
+        console.log('select function is running')
+        console.log('type is ', type)
         if(selectedFields.includes(type)){
             let selected = selectedFields.filter((field)=> field !== type)
-             selectField(selected)
-             const postToWorkWith = {
-                ...intialPost,
-                ['attachedFields'] : selected
-             }
-             setIntialPost({
-                ...postToWorkWith
-             })
+             selectField([...selected])
         }else{
+            console.log(selectedFields)
              const newArray = [...selectedFields, type];
-             selectField(newArray)
-             const postToWorkWith = {
-                ...intialPost,
-                ['attachedFields'] : newArray
-             }
-             setIntialPost({
-                ...postToWorkWith
-             })
+             console.log(newArray)
+             selectField([...newArray])
         }
     }
 
@@ -381,6 +379,7 @@ function UpdatePost(){
         console.log('username', account.userName)
         console.log('length of images', images.length)
         if(images.length > 0){
+            console.log('reached')
            const responses = await handleFileUploading();
            const updatedIntialPost = {
             ...intialPost, 
@@ -402,16 +401,14 @@ function UpdatePost(){
                     ['createdDate'] : new Date(),
                     ['userName']: account.userName
                 }
-                
-                setIntialPost({
-                    ...updatedIntialPost
-                })
            }
+           setPost({
+            ...updatedIntialPost
+        })
 
         }else{
             const updatedIntialPost = {
-                ...intialPost, 
-                ['images']: [...post.images],
+                ...intialPost,
                 ['userName']: account.userName
                }
                setIntialPost({
@@ -423,12 +420,10 @@ function UpdatePost(){
                     ['createdDate'] : new Date(),
                     ['userName']: account.userName
                 }
-                setIntialPost({
-                    ...updatedIntialPost
-                })
            }
-
-
+           setPost({
+            ...updatedIntialPost
+        })
         }
 
         // title: '',
@@ -450,7 +445,7 @@ function UpdatePost(){
                     categories.map(category=>{
                         return (
                             <div key={category.id}>
-                                <StyledElement style={{background: intialPost.attachedFields.includes(category.type) ? 'green' : 'red'}} onClick={() => {select(category.type)}}>
+                                <StyledElement style={{background: intialPost.attachedFields.includes(category.type) ? 'green' : 'red'}} onClick={(type) => {select(category.type)}}>
                                 {category.type}
                                 </StyledElement>
                             </div>

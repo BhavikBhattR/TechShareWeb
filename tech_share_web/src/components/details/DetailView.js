@@ -40,7 +40,8 @@ const ImageContainer = styled(Box)`
 const Image = styled('img')({
     height: "40vh",
     width: "100%",
-    objectFit: "cover"
+    objectFit: "contain",
+    overflow: "auto"
 })
 
 const PrevButton = styled('button')({
@@ -166,7 +167,8 @@ const DetailView = () => {
                         idToSend = id
                     }
                     let response = await API.getPostById(idToSend);
-                    console.log(response)
+                    console.log(response, 'response for getting a post by id')
+                    console.log(response.code)
                     if(response.isSuccess){
                         console.log('post_updated', typeof response.data.post.images)
                         const displayablePost = response.data.post.images[0] !== "" 

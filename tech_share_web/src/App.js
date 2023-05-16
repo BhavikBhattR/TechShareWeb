@@ -8,6 +8,8 @@ import Header from './components/header/Header';
 import CreatePost from './components/CreatePost';
 import DetailView from './components/details/DetailView';
 import UpdatePost from './components/UpdatePost';
+import About from './About/About';
+import Contact from './Contact/Contact';
 
 const clearSessionBeforeLogOut = () => {
   sessionStorage.removeItem('accessToken');
@@ -49,6 +51,14 @@ function App() {
 
                 <Route path='/update/:id' element={<PrivateRoute isAuthenticated={isAuthenticated}/>}>
                     <Route path='/update/:id' element={<UpdatePost />}></Route>
+                </Route>
+
+                <Route path='/about' element={<PrivateRoute isAuthenticated={isAuthenticated}/>}>
+                    <Route path='/about' element={<About />}></Route>
+                </Route>
+
+                <Route path='/contact' element={<PrivateRoute isAuthenticated={isAuthenticated}/>}>
+                    <Route path='/contact' element={<Contact />}></Route>
                 </Route>
 
                 </Routes>

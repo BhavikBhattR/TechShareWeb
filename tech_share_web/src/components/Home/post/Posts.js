@@ -24,7 +24,6 @@ const Posts = ({selectedCategoriesToDisplay}) => {
             formData.append("selectedFields", [...selectedCategoriesToDisplay]);
            let response = await API.getPosts(formData);
            if(response.isSuccess){
-            console.log(response.data.posts)
                 setPosts(response.data.posts)
            }
         }
@@ -39,7 +38,7 @@ const Posts = ({selectedCategoriesToDisplay}) => {
             formData.append("selectedFields", []);
            let response = await API.getPosts(formData);
            if(response.isSuccess){
-            console.log(response.data.posts)
+            
                 setPosts(response.data.posts)
            }
         }

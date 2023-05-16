@@ -11,9 +11,6 @@ export const getType = (value, body) => {
         if(typeof body === 'object'){
             const formData = body;
             const id = formData.get('_id');
-            console.log(body, 'body sent')
-            console.log(body)
-            console.log('id in extra fun is ', id)
             return { query: id}
         }else{
             return {query: body}
